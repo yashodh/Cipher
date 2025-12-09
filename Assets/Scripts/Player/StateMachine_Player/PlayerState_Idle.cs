@@ -25,10 +25,23 @@ public class PlayerState_Idle : PlayerState
     {
         base.Update();
         
-        // Update crouch state
+        // Decelerate speed while idle
+        player.UpdateSpeed(false);
+        
+        // Update crouch state and animation
         if (player.AnimationController != null)
         {
             player.AnimationController.SetCrouched(player.IsCrouched);
+            
+            // Update animation speed to show deceleration
+            if (player.CurrentSpeed > 0.1f)
+            {
+                player.AnimationController.PlayMoveAnimation(player.CurrentSpeed);
+            }
+            else
+            {
+                player.AnimationController.PlayIdleAnimation();
+            }
         }
         
         // Check for movement input to transition to Move state

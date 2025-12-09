@@ -26,6 +26,9 @@ public class PlayerState_Move : PlayerState
             return;
         }
         
+        // Update speed with acceleration
+        player.UpdateSpeed(true);
+        
         // Handle movement relative to camera
         Vector2 input = player.InputVector;
         
@@ -50,8 +53,8 @@ public class PlayerState_Move : PlayerState
         
         if (moveDirection != Vector3.zero)
         {
-            // Move player
-            Vector3 movement = moveDirection * player.MoveSpeed;
+            // Move player using current speed (not target speed)
+            Vector3 movement = moveDirection * player.CurrentSpeed;
             player.Move(movement);
             
             // Rotate player to face movement direction
@@ -61,8 +64,7 @@ public class PlayerState_Move : PlayerState
         // Update animation with current speed and crouch state
         if (player.AnimationController != null)
         {
-            float speed = input.magnitude * player.MoveSpeed;
-            player.AnimationController.PlayMoveAnimation(speed);
+            player.AnimationController.PlayMoveAnimation(player.CurrentSpeed);
             player.AnimationController.SetCrouched(player.IsCrouched);
         }
     }

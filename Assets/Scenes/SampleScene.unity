@@ -440,7 +440,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player
   moveSpeed: 10
+  maxSpeed: 15
+  acceleration: 5
+  deceleration: 10
   crouchSpeed: 2.5
+  sprintSpeedMultiplier: 2
   rotationSpeed: 10
   characterController: {fileID: 394885954}
 --- !u!114 &394885953
@@ -1167,7 +1171,7 @@ GameObject:
   - component: {fileID: 1483613614}
   - component: {fileID: 1483613613}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: PlayerSpawner
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

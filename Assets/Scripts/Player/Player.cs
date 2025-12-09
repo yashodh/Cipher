@@ -5,7 +5,11 @@ public class Player : MonoBehaviour
 {
     [Header("Movement Settings")]
     [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float maxSpeed = 15f;
+    [SerializeField] private float acceleration = 5f;
+    [SerializeField] private float deceleration = 10f;
     [SerializeField] private float crouchSpeed = 2.5f;
+    [SerializeField] private float sprintSpeedMultiplier = 2f;
     [SerializeField] private float rotationSpeed = 10f;
     
     [Header("Components")]
@@ -23,12 +27,31 @@ public class Player : MonoBehaviour
     public Vector2 InputVector { get; private set; }
     public bool IsMoving => InputVector.magnitude > 0.1f;
     public bool IsCrouched { get; private set; }
+    public bool IsSprinting { get; private set; }
+    
+    // Speed tracking
+    private float currentSpeed = 0f;
+    public float CurrentSpeed => currentSpeed;
     
     // Movement properties
-    public float MoveSpeed => IsCrouched ? crouchSpeed : moveSpeed;
+    public float MoveSpeed => moveSpeed;
+    public float MaxSpeed => maxSpeed;
+    public float Acceleration => acceleration;
+    public float Deceleration => deceleration;
     public float CrouchSpeed => crouchSpeed;
+    public float SprintSpeedMultiplier => sprintSpeedMultiplier;
     public float RotationSpeed => rotationSpeed;
     public CharacterController CharacterController => characterController;
+    
+    /// <summary>
+    /// Get target speed based on current state
+    /// </summary>
+    public float GetTargetSpeed()
+    {
+        if (IsCrouched) return crouchSpeed;
+        if (IsSprinting) return maxSpeed;
+        return moveSpeed;
+    }
     
     void Awake()
     {
@@ -99,17 +122,9 @@ public class Player : MonoBehaviour
             if (UnityEngine.InputSystem.Keyboard.current.sKey.isPressed) vertical -= 1f;
             if (UnityEngine.InputSystem.Keyboard.current.aKey.isPressed) horizontal -= 1f;
             if (UnityEngine.InputSystem.Keyboard.current.dKey.isPressed) horizontal += 1f;
-            
-            // Crouch input (C key or Left Ctrl)
-            if (UnityEngine.InputSystem.Keyboard.current.cKey.isPressed || 
-                UnityEngine.InputSystem.Keyboard.current.leftCtrlKey.isPressed)
-            {
-                IsCrouched = true;
-            }
-            else
-            {
-                IsCrouched = false;
-            }
+
+            IsSprinting = UnityEngine.InputSystem.Keyboard.current.leftShiftKey.isPressed ? true : false;
+            IsCrouched = (UnityEngine.InputSystem.Keyboard.current.cKey.isPressed || UnityEngine.InputSystem.Keyboard.current.leftCtrlKey.isPressed) ? true : false;
         }
         
         InputVector = new Vector2(horizontal, vertical);
@@ -151,6 +166,23 @@ public class Player : MonoBehaviour
             Quaternion targetRotation = Quaternion.LookRotation(direction);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
         }
+    }
+    
+    /// <summary>
+    /// Update current speed with acceleration/deceleration
+    /// </summary>
+    public void UpdateSpeed(bool isMoving)
+    {
+        currentSpeed = isMoving ? Mathf.MoveTowards(currentSpeed, GetTargetSpeed(), acceleration * Time.deltaTime)
+                                : Mathf.MoveTowards(currentSpeed, 0f, deceleration * Time.deltaTime);
+    }
+    
+    /// <summary>
+    /// Reset current speed to zero
+    /// </summary>
+    public void ResetSpeed()
+    {
+        currentSpeed = 0f;
     }
 
     private void OnDestroy()
