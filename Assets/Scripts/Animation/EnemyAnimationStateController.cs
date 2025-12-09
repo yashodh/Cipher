@@ -10,19 +10,8 @@ public class EnemyAnimationStateController : AnimationStateController
     [Tooltip("Name of the speed parameter in the Animator")]
     [SerializeField] private string speedParamName = "Speed";
     
-    [Tooltip("Name of the state parameter in the Animator")]
-    [SerializeField] private string stateParamName = "State";
-    
     [Tooltip("Name of the attack trigger in the Animator")]
     [SerializeField] private string attackTriggerName = "Attack";
-    
-    // State indices for animator (adjust based on your animator setup)
-    private const int STATE_IDLE = 0;
-    private const int STATE_ALERT = 1;
-    private const int STATE_HIDE = 2;
-    private const int STATE_PURSUE = 3;
-    private const int STATE_ATTACK = 4;
-    private const int STATE_DEAD = 5;
     
     private Enemy enemy;
     
@@ -50,7 +39,6 @@ public class EnemyAnimationStateController : AnimationStateController
     /// </summary>
     public override void PlayIdleAnimation()
     {
-        SetInt(stateParamName, STATE_IDLE);
         SetFloat(speedParamName, 0f);
     }
     
@@ -59,7 +47,6 @@ public class EnemyAnimationStateController : AnimationStateController
     /// </summary>
     public void PlayAlertAnimation()
     {
-        SetInt(stateParamName, STATE_ALERT);
         SetFloat(speedParamName, 0f);
     }
     
@@ -68,7 +55,6 @@ public class EnemyAnimationStateController : AnimationStateController
     /// </summary>
     public void PlayHideAnimation()
     {
-        SetInt(stateParamName, STATE_HIDE);
         SetFloat(speedParamName, 0f);
     }
     
@@ -77,7 +63,6 @@ public class EnemyAnimationStateController : AnimationStateController
     /// </summary>
     public void PlayPursueAnimation(float speed)
     {
-        SetInt(stateParamName, STATE_PURSUE);
         SetFloat(speedParamName, speed);
     }
     
@@ -86,7 +71,6 @@ public class EnemyAnimationStateController : AnimationStateController
     /// </summary>
     public void PlayPursueAnimation()
     {
-        SetInt(stateParamName, STATE_PURSUE);
         SetFloat(speedParamName, 1f);
     }
     
@@ -95,7 +79,6 @@ public class EnemyAnimationStateController : AnimationStateController
     /// </summary>
     public void PlayAttackAnimation()
     {
-        SetInt(stateParamName, STATE_ATTACK);
         SetTrigger(attackTriggerName);
     }
     
@@ -104,7 +87,6 @@ public class EnemyAnimationStateController : AnimationStateController
     /// </summary>
     public override void PlayDeathAnimation()
     {
-        SetInt(stateParamName, STATE_DEAD);
         SetFloat(speedParamName, 0f);
         SetTrigger("Death");
     }

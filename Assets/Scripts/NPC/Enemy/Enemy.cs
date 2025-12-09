@@ -9,6 +9,7 @@ public class Enemy : MonoBehaviour
     
     // State instances
     public EnemyState_Idle IdleState { get; private set; }
+    public EnemyState_Patrol PatrolState { get; private set; }
     public EnemyState_Alert AlertState { get; private set; }
     public EnemyState_Hide HideState { get; private set; }
     public EnemyState_Pursue PursueState { get; private set; }
@@ -21,6 +22,17 @@ public class Enemy : MonoBehaviour
     [SerializeField] private float detectionRange = 10f;
     [SerializeField] private float attackRange = 2f;
     
+    [Header("Movement")]
+    [SerializeField] private float patrolSpeed = 2f;
+    [SerializeField] private float pursueSpeed = 4f;
+    
+    // Patrol path (set by spawner at runtime)
+    private PatrolPath patrolPath;
+    
+    public float PatrolSpeed => patrolSpeed;
+    public float PursueSpeed => pursueSpeed;
+    public PatrolPath PatrolPath => patrolPath;
+    
     void Awake()
     {
         Debug.Log("Awake - Enemy");
@@ -30,6 +42,7 @@ public class Enemy : MonoBehaviour
         
         // Create state instances
         IdleState = new EnemyState_Idle(StateMachine, this);
+        PatrolState = new EnemyState_Patrol(StateMachine, this);
         AlertState = new EnemyState_Alert(StateMachine, this);
         HideState = new EnemyState_Hide(StateMachine, this);
         PursueState = new EnemyState_Pursue(StateMachine, this);
@@ -41,8 +54,17 @@ public class Enemy : MonoBehaviour
     {
         Debug.Log("Start - Enemy");
         
-        // Set initial state to Idle
+        // Start in Idle - patrol path will be set by spawner
+        // Spawner will transition to Patrol state after setting path
         StateMachine.Initialize(IdleState);
+    }
+    
+    /// <summary>
+    /// Set the patrol path for this enemy (called by spawner)
+    /// </summary>
+    public void SetPatrolPath(PatrolPath path)
+    {
+        patrolPath = path;
     }
 
     void Update()

@@ -44,12 +44,15 @@ public class EnemySpawner : Spawner
         
         Debug.Log($"[EnemySpawner] Enemy spawned successfully");
         
-        // Assign patrol path if provided
+        // Assign patrol path (enemy will start patrolling after 5 seconds of idle)
         if (assignedPatrolPath != null)
         {
-            // Store reference or pass to enemy
-            Debug.Log($"[EnemySpawner] Patrol path assigned to enemy");
-            // Example: enemy.SetPatrolPath(assignedPatrolPath);
+            enemy.SetPatrolPath(assignedPatrolPath);
+            Debug.Log($"[EnemySpawner] Patrol path assigned to enemy - will start patrol after idle period");
+        }
+        else
+        {
+            Debug.LogWarning($"[EnemySpawner] No patrol path assigned - enemy will remain idle");
         }
         
         // Activate or deactivate enemy based on settings
