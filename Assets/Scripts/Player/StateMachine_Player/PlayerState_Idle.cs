@@ -13,18 +13,29 @@ public class PlayerState_Idle : PlayerState
     {
         base.Enter();
         Debug.Log("Player entered Idle state");
-        // Add idle animation trigger here
+        
+        // Trigger idle animation
+        if (player.AnimationController != null)
+        {
+            player.AnimationController.PlayIdleAnimation();
+        }
     }
 
     public override void Update()
     {
         base.Update();
         
-        // Example: Check for movement input to transition to Move state
-        // if (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0)
-        // {
-        //     stateMachine.ChangeState(new PlayerState_Move(stateMachine, player));
-        // }
+        // Update crouch state
+        if (player.AnimationController != null)
+        {
+            player.AnimationController.SetCrouched(player.IsCrouched);
+        }
+        
+        // Check for movement input to transition to Move state
+        if (player.IsMoving)
+        {
+            stateMachine.ChangeState(player.MoveState);
+        }
     }
 
     public override void Exit()
