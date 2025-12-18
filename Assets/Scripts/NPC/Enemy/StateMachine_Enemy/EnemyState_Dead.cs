@@ -13,25 +13,25 @@ public class EnemyState_Dead : EnemyState
     {
         base.Enter();
         Debug.Log("Enemy entered Dead state");
-        // Add death animation trigger here
-        // Disable AI
-        // Drop loot
-        // Play death effects
-        // Disable colliders or set to ragdoll
+        
+        // Set animation state to Dead
+        EnemyAnimationStateController animController = enemy.GetComponent<EnemyAnimationStateController>();
+        if (animController != null)
+        {
+            animController.SetState(EnemyAnimationStateController.STATE_DEAD);
+            animController.PlayDeathAnimation();
+        }
+        
+        // Disable NavMesh agent
+        if (enemy.NavMeshAgent != null)
+        {
+            enemy.NavMeshAgent.isStopped = true;
+        }
     }
 
     public override void Update()
     {
         base.Update();
-        
-        // Dead state typically doesn't transition to other states
-        // Unless you have revival mechanics
-        
-        // Example: Fade out and destroy after animation
-        // if (enemy.DeathAnimationComplete())
-        // {
-        //     GameObject.Destroy(enemy.gameObject, 2f);
-        // }
     }
 
     public override void Exit()

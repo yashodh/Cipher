@@ -10,8 +10,17 @@ public class EnemyAnimationStateController : AnimationStateController
     [Tooltip("Name of the speed parameter in the Animator")]
     [SerializeField] private string speedParamName = "Speed";
     
+    [Tooltip("Name of the state parameter in the Animator")]
+    [SerializeField] private string stateParamName = "State";
+    
     [Tooltip("Name of the attack trigger in the Animator")]
     [SerializeField] private string attackTriggerName = "Attack";
+    
+    // State values
+    public const int STATE_PATROL = 0;
+    public const int STATE_ALERT = 1;
+    public const int STATE_PURSUE = 2;
+    public const int STATE_DEAD = 3;
     
     private Enemy enemy;
     
@@ -97,6 +106,15 @@ public class EnemyAnimationStateController : AnimationStateController
     public void SetMovementSpeed(float speed)
     {
         SetFloat(speedParamName, speed);
+    }
+    
+    /// <summary>
+    /// Set the current state in the animator
+    /// </summary>
+    /// <param name="stateValue">State integer: 0=Patrol, 1=Alert, 2=Pursue, 3=Dead</param>
+    public void SetState(int stateValue)
+    {
+        SetInt(stateParamName, stateValue);
     }
     
     /// <summary>

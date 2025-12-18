@@ -21,20 +21,56 @@ public class EnemyState_Patrol : EnemyState
         base.Enter();
         Debug.Log("Enemy entered Patrol state");
         
+        // Set animation state to Patrol
+        EnemyAnimationStateController animController = enemy.GetComponent<EnemyAnimationStateController>();
+        if (animController != null)
+        {
+            animController.SetState(EnemyAnimationStateController.STATE_PATROL);
+        }
+        
         // Get patrol path from enemy
         patrolPath = enemy.PatrolPath;
         
         if (patrolPath == null || patrolPath.NodeCount == 0)
         {
-            Debug.LogWarning("[EnemyState_Patrol] No patrol path assigned or patrol path is empty!");
-            // Fall back to Idle state if no patrol path
-            stateMachine.ChangeState(enemy.IdleState);
-            return;
+            Debug.LogWarning("[EnemyState_Patrol] No patrol path assigned or patrol path is empty! Enemy will stand still.");
+            // If no patrol path, just stand still and keep watching
+            if (enemy.NavMeshAgent != null)
+            {
+                enemy.NavMeshAgent.isStopped = true;
+            }
         }
         
-        // Start at the first node
-        currentNodeIndex = 0;
-        isWaiting = false;
+        // Set normal detection parameters
+        if (enemy.Detection != null)
+        {
+            enemy.Detection.SetDetectionParameters(enemy.NormalDetectionRange, enemy.NormalFieldOfView);
+        }
+        
+        // Resume NavMeshAgent and set patrol speed (only if we have a path)
+        if (patrolPath != null && patrolPath.NodeCount > 0)
+        {
+            if (enemy.NavMeshAgent != null)
+            {
+                enemy.NavMeshAgent.isStopped = false;
+                enemy.NavMeshAgent.speed = enemy.PatrolSpeed;
+                Debug.Log($"[Patrol] NavMeshAgent resumed - Speed: {enemy.NavMeshAgent.speed}, isStopped: {enemy.NavMeshAgent.isStopped}");
+                
+                // Check if agent is on NavMesh
+                if (!enemy.NavMeshAgent.isOnNavMesh)
+                {
+                    Debug.LogError("[Patrol] NavMeshAgent is NOT on NavMesh! Make sure NavMesh is baked and enemy is on it.");
+                }
+            }
+            else
+            {
+                Debug.LogError("[Patrol] NavMeshAgent is NULL!");
+            }
+            
+            // Start at the first node
+            currentNodeIndex = 0;
+            isWaiting = false;
+        }
     }
 
     public override void Update()
@@ -42,6 +78,17 @@ public class EnemyState_Patrol : EnemyState
         base.Update();
         
         if (patrolPath == null || patrolPath.NodeCount == 0) return;
+        
+        // Check if player is detected and alert meter is filling
+        if (enemy.CanSeePlayer())
+        {
+            // Transition to Alert state when player first detected
+            if (enemy.AlertMeter != null && enemy.AlertMeter.AlertLevel > 0f)
+            {
+                stateMachine.ChangeState(enemy.AlertState);
+                return;
+            }
+        }
     
         // Get current patrol node
         PatrolNode currentNode = patrolPath.GetNode(currentNodeIndex);
@@ -64,6 +111,12 @@ public class EnemyState_Patrol : EnemyState
                 // Finished waiting, move to next node
                 isWaiting = false;
                 currentNodeIndex = patrolPath.GetNextNodeIndex(currentNodeIndex, ref isReversing);
+                
+                // Resume NavMesh agent
+                if (enemy.NavMeshAgent != null)
+                {
+                    enemy.NavMeshAgent.isStopped = false;
+                }
             }
             return;
         }
@@ -77,9 +130,14 @@ public class EnemyState_Patrol : EnemyState
         float distanceToNode = direction.magnitude;
         
         // Check if reached node
-        if (distanceToNode < 0.5f)
+        if (distanceToNode < 0.1f)
         {
-            // Reached node, start waiting
+            // Reached node, stop and start waiting
+            if (enemy.NavMeshAgent != null)
+            {
+                enemy.NavMeshAgent.isStopped = true;
+            }
+            
             isWaiting = true;
             waitTimer.Start(currentNode.WaitTime);
             
@@ -92,29 +150,26 @@ public class EnemyState_Patrol : EnemyState
         }
         else
         {
-            // Move towards node
-            direction.Normalize();
-            
-            // Move enemy
-            float patrolSpeed = enemy.PatrolSpeed;
-            enemy.transform.position += direction * patrolSpeed * Time.deltaTime;
-            
-            // Update animation with patrol speed
-            EnemyAnimationStateController animController = enemy.GetComponent<EnemyAnimationStateController>();
-            if (animController != null)
+            // Move towards node using NavMesh
+            if (enemy.NavMeshAgent != null && enemy.NavMeshAgent.isOnNavMesh)
             {
-                animController.SetMovementSpeed(patrolSpeed);
+                enemy.NavMeshAgent.isStopped = false;
+                enemy.NavMeshAgent.speed = enemy.PatrolSpeed;
+                enemy.NavMeshAgent.SetDestination(targetPosition);
+                
+                Debug.Log($"[Patrol] Moving to node {currentNodeIndex} at {targetPosition}, Distance: {distanceToNode:F2}, Velocity: {enemy.NavMeshAgent.velocity.magnitude:F2}");
+                
+                // Update animation with current velocity
+                EnemyAnimationStateController animController = enemy.GetComponent<EnemyAnimationStateController>();
+                if (animController != null)
+                {
+                    float currentSpeed = enemy.NavMeshAgent.velocity.magnitude;
+                    animController.SetMovementSpeed(currentSpeed);
+                }
             }
-            
-            // Rotate to face movement direction
-            if (direction != Vector3.zero)
+            else
             {
-                Quaternion targetRotation = Quaternion.LookRotation(direction);
-                enemy.transform.rotation = Quaternion.Slerp(
-                    enemy.transform.rotation, 
-                    targetRotation, 
-                    5f * Time.deltaTime
-                );
+                Debug.LogWarning("[Patrol] Cannot move - NavMeshAgent is null or not on NavMesh!");
             }
         }
     }

@@ -25,7 +25,7 @@ public class PlayerState_Idle : PlayerState
     {
         base.Update();
         
-        // Decelerate speed while idle
+        // Decelerate speed while idle (works for both standing and crouched)
         player.UpdateSpeed(false);
         
         // Update crouch state and animation
